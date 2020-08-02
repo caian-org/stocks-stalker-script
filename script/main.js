@@ -2,9 +2,55 @@ var headerLineOffset = 3;
 
 var status = {
   OK: 200,
+  BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
   INTERNAL_ERROR: 500,
 };
+
+var sheet = SpreadsheetApp.getActiveSheet();
+
+function isAuthorized(e)
+{
+  var accessToken = PropertiesService
+    .getScriptProperties()
+    .getProperty('ACCESS_TOKEN');
+
+  return e.parameter.accessToken == accessToken;
+}
+
+function cleanAll(sheet)
+{
+  var last = sheet.getLastRow();
+  var r = 'C' + headerLineOffset + ':H' + last;
+
+  var v = [];
+  for (var i = 0; i <= (last - headerLineOffset); i++)
+    v.push(['', '', '', '', '', '']);
+
+  sheet.getRange(r).setValues(v);
+}
+
+function updateSheetContent(sheet, data)
+{
+  var tickers = data.tickers;
+
+  for (var i = 0; i < tickers.length; i++) {
+    var ticker = tickers[i];
+
+    var row = ticker.row + headerLineOffset;
+    var range = 'C' + row + ':H' + row;
+
+    var info = [
+      ticker.code,
+      (ticker.isBought ? 'Y' : 'N'),
+      ticker.expBuy,
+      ticker.expSell,
+      ticker.value,
+      ticker.update];
+
+    sheet.getRange(range).setValues([info]);
+  }
+}
 
 function getSheetContent(sheet)
 {
@@ -21,7 +67,7 @@ function getSheetContent(sheet)
 
     records.push({
       row: i,
-      ticker:   row[0],
+      code:     row[0],
       isBought: row[1] == 'Y',
       expBuy:   isNaN(expBuy)  ? null : expBuy,
       expSell:  isNaN(expSell) ? null : expSell,
@@ -43,18 +89,39 @@ function response(s, data)
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function err(err, data)
+{
+  return { error: err, got: data };
+}
+
 function doGet(e)
 {
-  var accessToken = PropertiesService
-    .getScriptProperties()
-    .getProperty('ACCESS_TOKEN');
-
-  if (e.parameter.accessToken != accessToken) {
+  if (!isAuthorized(e))
     return response(status.UNAUTHORIZED);
+
+  try {
+    return response(status.OK, getSheetContent(sheet));
   }
+  catch (ex) {
+    return response(status.INTERNAL_ERROR, err(ex, e));
+  }
+}
 
-  var sheet = SpreadsheetApp.getActiveSheet();
-  var data  = getSheetContent(sheet);
+function doPost(e)
+{
+  if (!isAuthorized(e))
+    return response(status.UNAUTHORIZED);
 
-  return response(status.OK, data);
+  if (typeof e.postData == 'undefined')
+    return response(status.BAD_REQUEST);
+
+  try {
+    cleanAll(sheet);
+    updateSheetContent(sheet, JSON.parse(e.postData.contents));
+
+    return response(status.OK);
+  }
+  catch (ex) {
+    return response(status.INTERNAL_ERROR, err(ex, e));
+  }
 }
