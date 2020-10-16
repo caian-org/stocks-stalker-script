@@ -1,0 +1,23 @@
+{
+  "name": "stocks-stalker-script",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@google/clasp": "^2.3.0"
+  },
+  "scripts": {
+    "login": "clasp login"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caian-org/stocks-stalker-script.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/caian-org/stocks-stalker-script/issues"
+  },
+  "homepage": "https://github.com/caian-org/stocks-stalker-script#readme"
+}
