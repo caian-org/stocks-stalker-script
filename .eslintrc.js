@@ -18,6 +18,7 @@ module.exports = {
         ],
         "@typescript-eslint/indent": "off",
         "@typescript-eslint/interface-name-prefix": "off",
+        "@typescript-eslint/no-explicit-any": "off",
     },
     "plugins": [
         "@typescript-eslint",
