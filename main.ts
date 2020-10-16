@@ -6,7 +6,7 @@ enum HttpStatus
   INTERNAL_ERROR = 500,
 }
 
-const headerLineOffset = 3
+const headerRowOffset = 3
 const sheet = SpreadsheetApp.getActiveSheet()
 
 function isAuthorized(e)
@@ -21,10 +21,10 @@ function isAuthorized(e)
 function cleanAll(sheet: GoogleAppsScript.Spreadsheet.Sheet)
 {
   const last = sheet.getLastRow()
-  const r = 'C' + headerLineOffset + ':H' + last
+  const r = 'C' + headerRowOffset + ':H' + last
 
   const v = []
-  for (let i = 0; i <= (last - headerLineOffset); i++)
+  for (let i = 0; i <= (last - headerRowOffset); i++)
     v.push(['', '', '', '', '', ''])
 
   sheet.getRange(r).setValues(v)
@@ -37,7 +37,7 @@ function updateSheetContent(sheet, data)
   for (let i = 0; i < tickers.length; i++) {
     const ticker = tickers[i]
 
-    const row = ticker.row + headerLineOffset
+    const row = ticker.row + headerRowOffset
     const range = 'C' + row + ':H' + row
 
     const info = [
@@ -54,7 +54,7 @@ function updateSheetContent(sheet, data)
 
 function getSheetContent(sheet)
 {
-  const range   = 'C' + headerLineOffset + ':F' + sheet.getLastRow()
+  const range   = 'C' + headerRowOffset + ':F' + sheet.getLastRow()
   const values  = sheet.getRange(range).getValues()
   const records = []
 
