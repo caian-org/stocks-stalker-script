@@ -13,7 +13,10 @@
     "typescript": "^3.8.2"
   },
   "scripts": {
-    "login": "clasp login"
+    "login": "clasp login",
+    "push": "clasp push",
+    "deploy": "clasp deploy",
+    "update": "clasp push && clasp deploy"
   },
   "repository": {
     "type": "git",
