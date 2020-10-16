@@ -4,7 +4,6 @@ type PostEvent = GoogleAppsScript.Events.DoPost
 type GetEvent = GoogleAppsScript.Events.DoGet
 type HttpEvent = PostEvent | GetEvent
 
-type Sheet = GoogleAppsScript.Spreadsheet.Sheet
 type TextOutput = GoogleAppsScript.Content.TextOutput
 
 
@@ -37,12 +36,11 @@ interface ITicker
 
 /* Globals */
 
-const headerRowOffset = 3
 const sheet = SpreadsheetApp.getActiveSheet()
 
-const lastRow = sheet.getLastRow() >= headerRowOffset
-  ? sheet.getLastRow()
-  : headerRowOffset
+const headerRowsOffset = 3
+const lastRow = sheet.getLastRow()
+const sheetIsEmpty = lastRow < headerRowsOffset
 
 
 /* Utils */
@@ -52,22 +50,22 @@ const times = (t: number) => Array.from(Array(t))
 
 /* Sheet manipulation */
 
-function cleanAll(sheet: Sheet): void
+function cleanAll(): void
 {
-  if (lastRow === headerRowOffset) return
+  if (sheetIsEmpty) return
 
-  const values = times(lastRow - headerRowOffset)
+  const values = times(lastRow - headerRowsOffset + 1)
     .map((): string[] => (['', '', '', '', '', '']))
 
   sheet
-    .getRange(`C${headerRowOffset}:H${lastRow}`)
+    .getRange(`C${headerRowsOffset}:H${lastRow}`)
     .setValues(values)
 }
 
-function updateSheetContent(sheet: Sheet, tickers: ITicker[]): void
+function updateSheetContent(tickers: ITicker[]): void
 {
   tickers.forEach((t: ITicker): void => {
-    const row = t.row + headerRowOffset
+    const row = t.row + headerRowsOffset
     const values = [
       t.code,
       (t.isBought ? 'Y' : 'N'),
@@ -83,10 +81,12 @@ function updateSheetContent(sheet: Sheet, tickers: ITicker[]): void
   })
 }
 
-function getSheetContent(sheet: Sheet): ITicker[]
+function getSheetContent(): ITicker[]
 {
+  if (sheetIsEmpty) return []
+
   const rows = sheet
-    .getRange(`C${headerRowOffset}:F${lastRow}`)
+    .getRange(`C${headerRowsOffset}:F${lastRow}`)
     .getValues()
 
   return rows.map((row: string[], i: number): ITicker => {
@@ -134,7 +134,7 @@ function doGet(e: GetEvent)
     return response(HttpStatus.UNAUTHORIZED)
 
   try {
-    return response(HttpStatus.OK, getSheetContent(sheet))
+    return response(HttpStatus.OK, getSheetContent())
   }
   catch (ex) {
     return response(HttpStatus.INTERNAL_ERROR, errorEvent(ex, e))
@@ -150,10 +150,10 @@ function doPost(e: PostEvent)
     return response(HttpStatus.BAD_REQUEST)
 
   try {
-    cleanAll(sheet)
+    cleanAll()
 
     const { tickers } = JSON.parse(e.postData.contents)
-    updateSheetContent(sheet, tickers)
+    updateSheetContent(tickers)
 
     return response(HttpStatus.OK)
   }
