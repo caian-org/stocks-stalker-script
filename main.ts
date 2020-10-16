@@ -1,3 +1,15 @@
+/* Type aliases */
+
+type PostEvent = GoogleAppsScript.Events.DoPost
+type GetEvent = GoogleAppsScript.Events.DoGet
+type HttpEvent = PostEvent | GetEvent
+
+type Sheet = GoogleAppsScript.Spreadsheet.Sheet
+type TextOutput = GoogleAppsScript.Content.TextOutput
+
+
+/* Custom types */
+
 enum HttpStatus
 {
   OK = 200,
@@ -6,81 +18,105 @@ enum HttpStatus
   INTERNAL_ERROR = 500,
 }
 
+interface IHash
+{
+  [key: string]: any;
+}
+
+interface ITicker
+{
+  row: number;
+  code: string;
+  isBought: boolean;
+  expBuy?: number;
+  expSell?: number;
+  value?: number;
+  update?: string;
+}
+
+
+/* Globals */
+
 const headerRowOffset = 3
 const sheet = SpreadsheetApp.getActiveSheet()
 
-function isAuthorized(e)
+const lastRow = sheet.getLastRow() >= headerRowOffset
+  ? sheet.getLastRow()
+  : headerRowOffset
+
+
+/* Utils */
+
+const times = (t: number) => Array.from(Array(t))
+
+
+/* Sheet manipulation */
+
+function cleanAll(sheet: Sheet): void
+{
+  if (lastRow === headerRowOffset) return
+
+  const values = times(lastRow - headerRowOffset)
+    .map((): string[] => (['', '', '', '', '', '']))
+
+  sheet
+    .getRange(`C${headerRowOffset}:H${lastRow}`)
+    .setValues(values)
+}
+
+function updateSheetContent(sheet: Sheet, tickers: ITicker[]): void
+{
+  tickers.forEach((t: ITicker): void => {
+    const row = t.row + headerRowOffset
+    const values = [
+      t.code,
+      (t.isBought ? 'Y' : 'N'),
+      t.expBuy,
+      t.expSell,
+      t.value,
+      t.update
+    ]
+
+    sheet
+      .getRange(`C${row}:H${row}`)
+      .setValues([values])
+  })
+}
+
+function getSheetContent(sheet: Sheet): ITicker[]
+{
+  const rows = sheet
+    .getRange(`C${headerRowOffset}:F${lastRow}`)
+    .getValues()
+
+  return rows.map((row: string[], i: number): ITicker => {
+    const code     = row[0]
+    const isBought = row[1] === 'Y'
+    const expBuy   = parseFloat(row[2]) || undefined
+    const expSell  = parseFloat(row[3]) || undefined
+
+    return { row: i, code, isBought, expBuy, expSell }
+  })
+}
+
+
+/* Event helpers */
+
+const errorEvent = (error: Error, eventData: HttpEvent) => ({ error, got: eventData })
+
+function isAuthorized(e: HttpEvent)
 {
   const accessToken = PropertiesService
     .getScriptProperties()
     .getProperty('ACCESS_TOKEN')
 
-  return e.parameter.accessToken == accessToken
+  return e.parameter['accessToken'] === accessToken
 }
 
-function cleanAll(sheet: GoogleAppsScript.Spreadsheet.Sheet)
+function response(status: HttpStatus, data?: any): TextOutput
 {
-  const last = sheet.getLastRow()
-  const r = 'C' + headerRowOffset + ':H' + last
-
-  const v = []
-  for (let i = 0; i <= (last - headerRowOffset); i++)
-    v.push(['', '', '', '', '', ''])
-
-  sheet.getRange(r).setValues(v)
-}
-
-function updateSheetContent(sheet, data)
-{
-  const tickers = data.tickers
-
-  for (let i = 0; i < tickers.length; i++) {
-    const ticker = tickers[i]
-
-    const row = ticker.row + headerRowOffset
-    const range = 'C' + row + ':H' + row
-
-    const info = [
-      ticker.code,
-      (ticker.isBought ? 'Y' : 'N'),
-      ticker.expBuy,
-      ticker.expSell,
-      ticker.value,
-      ticker.update]
-
-    sheet.getRange(range).setValues([info])
-  }
-}
-
-function getSheetContent(sheet)
-{
-  const range   = 'C' + headerRowOffset + ':F' + sheet.getLastRow()
-  const values  = sheet.getRange(range).getValues()
-  const records = []
-
-  for (let i = 0; i < values.length; i++)
-  {
-    const row = values[i]
-
-    const expBuy  = parseFloat(row[2])
-    const expSell = parseFloat(row[3])
-
-    records.push({
-      row: i,
-      code:     row[0],
-      isBought: row[1] == 'Y',
-      expBuy:   isNaN(expBuy)  ? null : expBuy,
-      expSell:  isNaN(expSell) ? null : expSell,
-    })
-  }
-
-  return records
-}
-
-function response(s, data)
-{
-  const res = { status: s }
-  if (typeof data != 'undefined') {
+  const res: IHash = { status }
+  if (typeof(data) !== 'undefined') {
     res.data = data
   }
 
@@ -89,12 +125,10 @@ function response(s, data)
     .setMimeType(ContentService.MimeType.JSON)
 }
 
-function err(err, data)
-{
-  return { error: err, got: data }
-}
 
-function doGet(e)
+/* HTTP events */
+
+function doGet(e: GetEvent)
 {
   if (!isAuthorized(e))
     return response(HttpStatus.UNAUTHORIZED)
@@ -103,25 +137,27 @@ function doGet(e)
     return response(HttpStatus.OK, getSheetContent(sheet))
   }
   catch (ex) {
-    return response(HttpStatus.INTERNAL_ERROR, err(ex, e))
+    return response(HttpStatus.INTERNAL_ERROR, errorEvent(ex, e))
   }
 }
 
-function doPost(e)
+function doPost(e: PostEvent)
 {
   if (!isAuthorized(e))
     return response(HttpStatus.UNAUTHORIZED)
 
-  if (typeof e.postData == 'undefined')
+  if (typeof(e.postData) === 'undefined')
     return response(HttpStatus.BAD_REQUEST)
 
   try {
     cleanAll(sheet)
-    updateSheetContent(sheet, JSON.parse(e.postData.contents))
+
+    const { tickers } = JSON.parse(e.postData.contents)
+    updateSheetContent(sheet, tickers)
 
     return response(HttpStatus.OK)
   }
   catch (ex) {
-    return response(HttpStatus.INTERNAL_ERROR, err(ex, e))
+    return response(HttpStatus.INTERNAL_ERROR, errorEvent(ex, e))
   }
 }
