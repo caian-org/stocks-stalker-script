@@ -10,6 +10,7 @@
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",
     "eslint": "^7.11.0",
+    "husky": "^4.3.0",
     "standardx": "^5.0.0",
     "typescript": "^3.8.2"
   },
@@ -20,7 +21,8 @@
     "update": "clasp push && clasp deploy",
     "lint": "eslint main.ts",
     "check": "standardx main.ts",
-    "standard": "standardx --fix main.ts"
+    "standard": "standardx --fix main.ts",
+    "test": "true"
   },
   "repository": {
     "type": "git",
@@ -28,7 +30,15 @@
   },
   "standardx": {
     "parser": "@typescript-eslint/parser",
-    "plugins": [ "@typescript-eslint/eslint-plugin" ]
+    "plugins": [
+      "@typescript-eslint/eslint-plugin"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run check && npm run lint",
+      "pre-push": "npm test"
+    }
   },
   "author": "Caian R. Ertl <hi@caian.org>",
   "license": "CC0-1.0",
