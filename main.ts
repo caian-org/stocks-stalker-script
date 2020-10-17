@@ -6,24 +6,20 @@ type HttpEvent = PostEvent | GetEvent
 
 type TextOutput = GoogleAppsScript.Content.TextOutput
 
-
 /* Custom types */
 
-enum HttpStatus
-{
+enum HttpStatus {
   OK = 200,
   BAD_REQUEST = 400,
   UNAUTHORIZED = 401,
   INTERNAL_ERROR = 500,
 }
 
-interface IHash
-{
+interface IHash {
   [key: string]: any;
 }
 
-interface ITicker
-{
+interface ITicker {
   row: number;
   code: string;
   isBought: boolean;
@@ -33,7 +29,6 @@ interface ITicker
   update?: string;
 }
 
-
 /* Globals */
 
 const sheet = SpreadsheetApp.getActiveSheet()
@@ -42,16 +37,13 @@ const headerRowsOffset = 3
 const lastRow = sheet.getLastRow()
 const sheetIsEmpty = lastRow < headerRowsOffset
 
-
 /* Utils */
 
 const times = (t: number) => Array.from(Array(t))
 
-
 /* Sheet manipulation */
 
-function cleanAll(): void
-{
+function cleanAll (): void {
   if (sheetIsEmpty) return
 
   const values = times(lastRow - headerRowsOffset + 1)
@@ -62,8 +54,7 @@ function cleanAll(): void
     .setValues(values)
 }
 
-function updateSheetContent(tickers: ITicker[]): void
-{
+function updateSheetContent (tickers: ITicker[]): void {
   tickers.forEach((t: ITicker): void => {
     const row = t.row + headerRowsOffset
     const values = [
@@ -81,8 +72,7 @@ function updateSheetContent(tickers: ITicker[]): void
   })
 }
 
-function getSheetContent(): ITicker[]
-{
+function getSheetContent (): ITicker[] {
   if (sheetIsEmpty) return []
 
   const rows = sheet
@@ -90,33 +80,31 @@ function getSheetContent(): ITicker[]
     .getValues()
 
   return rows.map((row: string[], i: number): ITicker => {
-    const code     = row[0]
+    const code = row[0]
     const isBought = row[1] === 'Y'
-    const expBuy   = parseFloat(row[2]) || undefined
-    const expSell  = parseFloat(row[3]) || undefined
+    const expBuy = parseFloat(row[2]) || undefined
+    const expSell = parseFloat(row[3]) || undefined
 
     return { row: i, code, isBought, expBuy, expSell }
   })
 }
 
-
 /* Event helpers */
 
 const errorEvent = (error: Error, eventData: HttpEvent) => ({ error, got: eventData })
 
-function isAuthorized(e: HttpEvent)
-{
+function isAuthorized (e: HttpEvent) {
   const accessToken = PropertiesService
     .getScriptProperties()
     .getProperty('ACCESS_TOKEN')
 
-  return e.parameter['accessToken'] === accessToken
+  const p = e.parameter as IHash
+  return p.accessToken === accessToken
 }
 
-function response(status: HttpStatus, data?: any): TextOutput
-{
+function response (status: HttpStatus, data?: any): TextOutput {
   const res: IHash = { status }
-  if (typeof(data) !== 'undefined') {
+  if (typeof (data) !== 'undefined') {
     res.data = data
   }
 
@@ -125,29 +113,24 @@ function response(status: HttpStatus, data?: any): TextOutput
     .setMimeType(ContentService.MimeType.JSON)
 }
 
-
 /* HTTP events */
 
-function doGet(e: GetEvent)
-{
-  if (!isAuthorized(e))
-    return response(HttpStatus.UNAUTHORIZED)
+/* eslint-disable-next-line */
+function doGet(e: GetEvent) {
+  if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
 
   try {
     return response(HttpStatus.OK, getSheetContent())
-  }
-  catch (ex) {
+  } catch (ex) {
     return response(HttpStatus.INTERNAL_ERROR, errorEvent(ex, e))
   }
 }
 
-function doPost(e: PostEvent)
-{
-  if (!isAuthorized(e))
-    return response(HttpStatus.UNAUTHORIZED)
+/* eslint-disable-next-line */
+function doPost(e: PostEvent) {
+  if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
 
-  if (typeof(e.postData) === 'undefined')
-    return response(HttpStatus.BAD_REQUEST)
+  if (typeof (e.postData) === 'undefined') { return response(HttpStatus.BAD_REQUEST) }
 
   try {
     cleanAll()
@@ -156,8 +139,7 @@ function doPost(e: PostEvent)
     updateSheetContent(tickers)
 
     return response(HttpStatus.OK)
-  }
-  catch (ex) {
+  } catch (ex) {
     return response(HttpStatus.INTERNAL_ERROR, errorEvent(ex, e))
   }
 }
