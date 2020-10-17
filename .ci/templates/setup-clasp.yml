@@ -3,10 +3,6 @@ parameters:
     type: string
     default: $(aws.s3-dir)
 
-  - name: ci
-    type: string
-    default: ${{ variables['System.DefaultWorkingDirectory'] }}/.ci
-
 
 steps:
   - task: Bash@3
@@ -21,7 +17,7 @@ steps:
       script: pip3 install awscli
     displayName: Install awscli
 
-  - template: ${{ ci }}/templates/awscli-cmd.yml
+  - template: ${{ variables['System.DefaultWorkingDirectory'] }}/.ci/templates/awscli-cmd.yml
     parameters:
       command: python3 -m awscli s3 cp '${{ parameters.awsS3Dir }}' . --recursive
       display: Download credentials files

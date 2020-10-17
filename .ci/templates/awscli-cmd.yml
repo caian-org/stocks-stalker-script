@@ -11,7 +11,7 @@ parameters:
     type: string
     default: $(aws.secret-key)
 
-  - name: commmand
+  - name: command
     type: string
 
   - name: display
