@@ -1,0 +1,18 @@
+parameters:
+  onlyProd: 'false'
+
+
+steps:
+  - ${{ if eq(parameters.onlyProd, 'true') }}:
+    - task: Bash@3
+      inputs:
+        targetType: inline
+        script: npm install --only=prod
+      displayName: Install production packages
+
+  - ${{ if eq(parameters.onlyProd, 'false') }}:
+    - task: Bash@3
+      inputs:
+        targetType: inline
+        script: npm install
+      displayName: Install all packages

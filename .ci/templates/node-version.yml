@@ -1,0 +1,5 @@
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.19.0'
+    displayName: Set NodeJS version to 12.9.0

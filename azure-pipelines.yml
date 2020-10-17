@@ -1,0 +1,39 @@
+trigger:
+  paths:
+    exclude:
+      - README.md
+
+  tags:
+    include:
+      - v*
+
+  branches:
+    include:
+      - master
+      - dev
+
+
+variables:
+  vmImageName: ubuntu-latest
+
+
+jobs:
+  - job: Validation
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+      - template: .ci/templates/node-version.yml
+      - template: .ci/templates/node-packages.yml
+
+      - task: Bash@3
+        inputs:
+          targetType: inline
+          script: npm run check
+        displayName: Check coding style
+
+      - task: Bash@3
+        inputs:
+          targetType: inline
+          script: npm run lint
+        displayName: Check linter
