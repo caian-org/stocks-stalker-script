@@ -1,0 +1,30 @@
+parameters:
+  - name: awsRegion
+    type: string
+    default: $(aws.region)
+
+  - name: awsAccessKey
+    type: string
+    default: $(aws.access-key)
+
+  - name: awsSecretKey
+    type: string
+    default: $(aws.secret-key)
+
+  - name: commmand
+    type: string
+
+  - name: display
+    type: string
+
+
+steps:
+  - task: Bash@3
+    inputs:
+      targetType: inline
+      script: ${{ parameters.command }}
+    displayName: ${{ parameters.display }}
+    env:
+      AWS_DEFAULT_REGION: ${{ parameters.awsRegion }}
+      AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKey }}
+      AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretKey }}

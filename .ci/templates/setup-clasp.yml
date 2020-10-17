@@ -1,19 +1,11 @@
 parameters:
-  - name: awsRegion
-    type: string
-    default: $(aws.region)
-
-  - name: awsAccessKey
-    type: string
-    default: $(aws.access-key)
-
-  - name: awsSecretKey
-    type: string
-    default: $(aws.secret-key)
-
   - name: awsS3Dir
     type: string
     default: $(aws.s3-dir)
+
+  - name: ci
+    type: string
+    default: ${{ variables['System.DefaultWorkingDirectory'] }}/.ci
 
 
 steps:
@@ -29,15 +21,10 @@ steps:
       script: pip3 install awscli
     displayName: Install awscli
 
-  - task: Bash@3
-    inputs:
-      targetType: inline
-      script: python3 -m awscli s3 cp '${{ parameters.awsS3Dir }}' . --recursive
-    displayName: Download credentials files
-    env:
-      AWS_DEFAULT_REGION: ${{ parameters.awsRegion }}
-      AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKey }}
-      AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretKey }}
+  - template: ${{ ci }}/templates/awscli-cmd.yml
+    parameters:
+      command: python3 -m awscli s3 cp '${{ parameters.awsS3Dir }}' . --recursive
+      display: Download credentials files
 
   - task: Bash@3
     inputs:
