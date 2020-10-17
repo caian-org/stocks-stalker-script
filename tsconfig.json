@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "removeComments": true,
     "lib": ["esnext"],
     "experimentalDecorators": true
   }
