@@ -23,7 +23,7 @@
     "standard": "standardx --fix *.ts",
     "login": "clasp login",
     "push": "clasp push",
-    "deploy:web": "clasp deploy",
+    "deploy:web": "clasp deploy --deploymentId \"$GAS_WEB_DEPLOYMENT_ID\"",
     "deploy:api": "clasp deploy --deploymentId \"$GAS_API_DEPLOYMENT_ID\"",
     "update": "clasp push && npm run deploy:api && npm run deploy:web",
     "test": "clasp run 'testAll' --nondev"

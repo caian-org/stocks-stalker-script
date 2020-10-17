@@ -77,17 +77,8 @@ jobs:
         name: gas
         inputs:
           targetType: inline
-          script: |
-            export WEB_DEPLOYMENT_ID="$(npm run update | tail -n 1 | cut -d" " -f2)"
-            echo "##vso[task.setvariable variable=web-deployment-id;issecret=true;isoutput=true]$WEB_DEPLOYMENT_ID"
+          script: npm run update
         displayName: Push changes and deploy
         env:
           GAS_API_DEPLOYMENT_ID: $(gas.api-deployment-id)
-
-      - template: .ci/templates/awscli-cmd.yml
-        parameters:
-          command: |
-            python3 -m awscli lambda update-function-configuration \
-              --function-name $(aws.lambda-name) \
-              --environment "Variables={SCRIPT_ID=$(gas.web-deployment-id)}"
-          display: Update lambda config
+          GAS_WEB_DEPLOYMENT_ID: $(gas.web-deployment-id)
