@@ -55,7 +55,7 @@ function cleanAll (): void {
 
   sheet
     .getRange(`C${headerRowsOffset}:H${lastRow}`)
-    .setValues(values)
+    .setValues([values])
 }
 
 function updateSheetContent (tickers: ITicker[]): void {
