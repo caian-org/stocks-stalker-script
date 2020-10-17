@@ -15,6 +15,11 @@ enum HttpStatus {
   INTERNAL_ERROR = 500,
 }
 
+enum Sheet {
+  TICKERS = 'tickers',
+  TEST = 'test',
+}
+
 interface IHash {
   [key: string]: any;
 }
@@ -31,6 +36,7 @@ interface ITicker {
 
 /* Globals */
 
+const document = SpreadsheetApp.getActiveSpreadsheet()
 const sheet = SpreadsheetApp.getActiveSheet()
 
 const headerRowsOffset = 3
@@ -42,6 +48,8 @@ const sheetIsEmpty = lastRow < headerRowsOffset
 const times = (t: number) => Array.from(Array(t))
 
 /* Sheet manipulation */
+
+const setSheet = (name: string) => SpreadsheetApp.setActiveSheet(document.getSheetByName(name))
 
 function cleanAll (): void {
   if (sheetIsEmpty) return
@@ -117,6 +125,8 @@ function response (status: HttpStatus, data?: any): TextOutput {
 
 /* eslint-disable-next-line */
 function doGet(e: GetEvent) {
+  setSheet(Sheet.TICKERS)
+
   if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
 
   try {
@@ -128,8 +138,9 @@ function doGet(e: GetEvent) {
 
 /* eslint-disable-next-line */
 function doPost(e: PostEvent) {
-  if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
+  setSheet(Sheet.TICKERS)
 
+  if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
   if (typeof (e.postData) === 'undefined') { return response(HttpStatus.BAD_REQUEST) }
 
   try {
