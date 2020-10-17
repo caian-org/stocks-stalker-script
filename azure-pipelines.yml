@@ -37,3 +37,46 @@ jobs:
           targetType: inline
           script: npm run lint
         displayName: Check linter
+
+  - job: Test
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+      - template: .ci/templates/node-version.yml
+      - template: .ci/templates/node-packages.yml
+      - template: .ci/templates/setup-clasp.yml
+
+      - task: Bash@3
+        inputs:
+          targetType: inline
+          script: npm test
+        displayName: Run tests
+
+  - job: Deploy
+    pool:
+      vmImage: $(vmImageName)
+
+    dependsOn:
+      - Validation
+      - Test
+    condition: |
+      and
+      (
+        in(dependencies.Validation.result, 'Succeeded'),
+        in(dependencies.Test.result, 'Succeeded'),
+        startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
+      )
+
+    steps:
+      - template: .ci/templates/node-version.yml
+      - template: .ci/templates/node-packages.yml
+      - template: .ci/templates/setup-clasp.yml
+
+      - task: Bash@3
+        inputs:
+          targetType: inline
+          script: npm run update
+        displayName: Push changes and deploy
+        env:
+          GAS_API_DEPLOYMENT_ID: $(gas.api-deployment-id)

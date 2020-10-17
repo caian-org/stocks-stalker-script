@@ -1,0 +1,42 @@
+parameters:
+  - name: awsRegion
+    type: string
+    default: $(aws.region)
+
+  - name: awsAccessKey
+    type: string
+    default: $(aws.access-key)
+
+  - name: awsSecretKey
+    type: string
+    default: $(aws.secret-key)
+
+  - name: awsS3Dir
+    type: string
+    default: $(aws.s3-dir)
+
+
+steps:
+  - task: Bash@3
+    inputs:
+      targetType: inline
+      script: pip3 install awscli
+    displayName: Install awscli
+
+  - task: Bash@3
+    inputs:
+      targetType: inline
+      script: python3 -m awscli s3 cp '${{ parameters.awsS3Dir }}' . --recursive
+    displayName: Download credentials files
+    env:
+      AWS_DEFAULT_REGION: ${{ parameters.awsRegion }}
+      AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKey }}
+      AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretKey }}
+
+  - task: Bash@3
+    inputs:
+      targetType: inline
+      script: |
+        mv .clasprc-home.json ~
+        mv .clasprc-proj.json .clasprc.json
+    displayName: Move files to proper locations
