@@ -16,6 +16,8 @@ module.exports = {
             "error",
             "never"
         ],
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": "error",
         "@typescript-eslint/indent": "off",
         "@typescript-eslint/interface-name-prefix": "off",
         "@typescript-eslint/no-explicit-any": "off",
