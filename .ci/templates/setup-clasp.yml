@@ -43,12 +43,6 @@ steps:
     inputs:
       targetType: inline
       script: |
-        rm "$GIT_DIR/.clasp.json"
-        mv .clasp.json "$GIT_DIR"
         mv .clasprc-home.json "$HOME/.clasprc.json"
-        mv .clasprc-proj.json "$GIT_DIR/.clasprc.json"
-        ls -lash
-        ls -lash $HOME
+        mv .clasprc-proj.json .clasprc.json
     displayName: Move files to proper locations
-    env:
-      GIT_DIR: '$(Agent.BuildDirectory)/s'
