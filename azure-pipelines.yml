@@ -87,7 +87,7 @@ jobs:
       - template: .ci/templates/awscli-cmd.yml
         parameters:
           command: |
-            python3 -m aws lambda update-function-configuration \
+            python3 -m awscli lambda update-function-configuration \
               --function-name $(aws.lambda-name) \
               --environment "Variables={SCRIPT_ID=$(gas.web-deployment-id)}"
           display: Update lambda config
