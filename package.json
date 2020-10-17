@@ -10,20 +10,28 @@
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",
     "eslint": "^7.11.0",
+    "standardx": "^5.0.0",
     "typescript": "^3.8.2"
   },
   "scripts": {
     "login": "clasp login",
     "push": "clasp push",
     "deploy": "clasp deploy",
-    "update": "clasp push && clasp deploy"
+    "update": "clasp push && clasp deploy",
+    "lint": "eslint main.ts",
+    "check": "standardx main.ts",
+    "standard": "standardx --fix main.ts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/caian-org/stocks-stalker-script.git"
   },
-  "author": "",
-  "license": "ISC",
+  "standardx": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [ "@typescript-eslint/eslint-plugin" ]
+  },
+  "author": "Caian R. Ertl <hi@caian.org>",
+  "license": "CC0-1.0",
   "bugs": {
     "url": "https://github.com/caian-org/stocks-stalker-script/issues"
   },
