@@ -43,10 +43,6 @@ const headerRowsOffset = 3
 const lastRow = sheet.getLastRow()
 const sheetIsEmpty = lastRow < headerRowsOffset
 
-/* Utils */
-
-const times = (t: number) => Array.from(Array(t))
-
 /* Sheet manipulation */
 
 const setSheet = (name: string) => SpreadsheetApp.setActiveSheet(document.getSheetByName(name))
@@ -54,7 +50,7 @@ const setSheet = (name: string) => SpreadsheetApp.setActiveSheet(document.getShe
 function cleanAll (): void {
   if (sheetIsEmpty) return
 
-  const values = times(lastRow - headerRowsOffset + 1)
+  const values = Array(lastRow - headerRowsOffset + 1)
     .map((): string[] => (['', '', '', '', '', '']))
 
   sheet
