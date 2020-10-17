@@ -25,7 +25,7 @@
     "push": "clasp push",
     "deploy:web": "clasp deploy",
     "deploy:api": "clasp deploy --deploymentId \"$GAS_API_DEPLOYMENT_ID\"",
-    "update": "clasp push && npm run deploy:web && npm run deploy:api",
+    "update": "clasp push && npm run deploy:api && npm run deploy:web",
     "test": "clasp run 'testAll' --nondev"
   },
   "repository": {
