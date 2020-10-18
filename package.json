@@ -18,9 +18,9 @@
     "typescript": "^3.8.2"
   },
   "scripts": {
-    "lint": "eslint *.ts",
-    "check": "standardx *.ts",
-    "standard": "standardx --fix *.ts",
+    "lint": "eslint src/*.ts",
+    "check": "standardx src/*.ts",
+    "standard": "standardx --fix src/*.ts",
     "login": "clasp login",
     "push": "clasp push",
     "deploy:web": "clasp deploy --deploymentId \"$GAS_WEB_DEPLOYMENT_ID\"",
