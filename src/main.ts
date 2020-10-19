@@ -50,8 +50,10 @@ const setSheet = (name: string) => SpreadsheetApp.setActiveSheet(document.getShe
 function cleanAll (): void {
   if (sheetIsEmpty) return
 
-  const values = Array(lastRow - headerRowsOffset + 1)
-    .map((): string[] => (['', '', '', '', '', '']))
+  const values: string[][] = []
+  for (let i = 0, l = (lastRow - headerRowsOffset + 1); i < l; i++) {
+    values.push(['', '', '', '', '', ''])
+  }
 
   sheet
     .getRange(`C${headerRowsOffset}:H${lastRow}`)
