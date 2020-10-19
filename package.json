@@ -26,7 +26,8 @@
     "deploy:web": "clasp deploy --deploymentId \"$GAS_WEB_DEPLOYMENT_ID\"",
     "deploy:api": "clasp deploy --deploymentId \"$GAS_API_DEPLOYMENT_ID\"",
     "update": "clasp push && npm run deploy:api && npm run deploy:web",
-    "test": "clasp run 'testAll' --nondev"
+    "test": "clasp run 'testAll' --nondev",
+    "remote": "clasp run \"$CMD\""
   },
   "repository": {
     "type": "git",
