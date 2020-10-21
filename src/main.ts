@@ -17,6 +17,7 @@ enum HttpStatus {
 
 enum Sheet {
   TICKERS = 'tickers',
+  DEBUG = 'debug',
   TEST = 'test',
 }
 
@@ -43,9 +44,40 @@ const headerRowsOffset = 3
 const lastRow = sheet.getLastRow()
 const sheetIsEmpty = lastRow < headerRowsOffset
 
+/* Event helpers */
+
+const errorEvent = (error: Error, eventData: HttpEvent) => ({ error, got: eventData })
+
+const isDebugRequest = (e: HttpEvent) => Object.prototype.hasOwnProperty.call(e.parameter, 'isDebug')
+
+function isAuthorized (e: HttpEvent) {
+  const accessToken = PropertiesService
+    .getScriptProperties()
+    .getProperty('ACCESS_TOKEN')
+
+  const p = e.parameter as IHash
+  return p.accessToken === accessToken
+}
+
+function response (status: HttpStatus, data?: any): TextOutput {
+  const res: IHash = { status }
+  if (typeof (data) !== 'undefined') {
+    res.data = data
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(res))
+    .setMimeType(ContentService.MimeType.JSON)
+}
+
 /* Sheet manipulation */
 
 const setSheet = (name: string) => SpreadsheetApp.setActiveSheet(document.getSheetByName(name))
+
+const loadSheetCond = (e: HttpEvent) => (
+  isDebugRequest(e)
+    ? setSheet(Sheet.DEBUG)
+    : setSheet(Sheet.TICKERS))
 
 function cleanAll (): void {
   if (sheetIsEmpty) return
@@ -95,35 +127,11 @@ function getSheetContent (): ITicker[] {
   })
 }
 
-/* Event helpers */
-
-const errorEvent = (error: Error, eventData: HttpEvent) => ({ error, got: eventData })
-
-function isAuthorized (e: HttpEvent) {
-  const accessToken = PropertiesService
-    .getScriptProperties()
-    .getProperty('ACCESS_TOKEN')
-
-  const p = e.parameter as IHash
-  return p.accessToken === accessToken
-}
-
-function response (status: HttpStatus, data?: any): TextOutput {
-  const res: IHash = { status }
-  if (typeof (data) !== 'undefined') {
-    res.data = data
-  }
-
-  return ContentService
-    .createTextOutput(JSON.stringify(res))
-    .setMimeType(ContentService.MimeType.JSON)
-}
-
 /* HTTP events */
 
 /* eslint-disable-next-line */
 function doGet(e: GetEvent) {
-  setSheet(Sheet.TICKERS)
+  loadSheetCond(e)
 
   if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
 
@@ -136,15 +144,15 @@ function doGet(e: GetEvent) {
 
 /* eslint-disable-next-line */
 function doPost(e: PostEvent) {
-  setSheet(Sheet.TICKERS)
+  loadSheetCond(e)
 
   if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
   if (typeof (e.postData) === 'undefined') { return response(HttpStatus.BAD_REQUEST) }
 
   try {
-    cleanAll()
-
     const { tickers } = JSON.parse(e.postData.contents)
+
+    cleanAll()
     updateSheetContent(tickers)
 
     return response(HttpStatus.OK)
