@@ -4,6 +4,7 @@ type PostEvent = GoogleAppsScript.Events.DoPost
 type GetEvent = GoogleAppsScript.Events.DoGet
 type HttpEvent = PostEvent | GetEvent
 
+type Spreadsheet = GoogleAppsScript.Spreadsheet.Sheet
 type TextOutput = GoogleAppsScript.Content.TextOutput
 
 /* Custom types */
@@ -38,11 +39,10 @@ interface ITicker {
 /* Globals */
 
 const document = SpreadsheetApp.getActiveSpreadsheet()
-const sheet = SpreadsheetApp.getActiveSheet()
-
 const headerRowsOffset = 3
-const lastRow = sheet.getLastRow()
-const sheetIsEmpty = lastRow < headerRowsOffset
+
+const getActiveSheet = () => SpreadsheetApp.getActiveSheet()
+const sheetIsEmpty = () => getActiveSheet().getLastRow() < headerRowsOffset
 
 /* Event helpers */
 
@@ -79,20 +79,20 @@ const loadSheetCond = (e: HttpEvent) => (
     ? setSheet(Sheet.DEBUG)
     : setSheet(Sheet.TICKERS))
 
-function cleanAll (): void {
-  if (sheetIsEmpty) return
+function cleanAll (ss: Spreadsheet): void {
+  if (sheetIsEmpty()) return
+
+  const last = ss.getLastRow()
 
   const values: string[][] = []
-  for (let i = 0, l = (lastRow - headerRowsOffset + 1); i < l; i++) {
+  for (let i = 0, l = (last - headerRowsOffset + 1); i < l; i++) {
     values.push(['', '', '', '', '', ''])
   }
 
-  sheet
-    .getRange(`C${headerRowsOffset}:H${lastRow}`)
-    .setValues(values)
+  ss.getRange(`C${headerRowsOffset}:H${last}`).setValues(values)
 }
 
-function updateSheetContent (tickers: ITicker[]): void {
+function updateSheetContent (ss: Spreadsheet, tickers: ITicker[]): void {
   tickers.forEach((t: ITicker): void => {
     const row = t.row + headerRowsOffset
     const values = [
@@ -104,18 +104,14 @@ function updateSheetContent (tickers: ITicker[]): void {
       t.update
     ]
 
-    sheet
-      .getRange(`C${row}:H${row}`)
-      .setValues([values])
+    ss.getRange(`C${row}:H${row}`).setValues([values])
   })
 }
 
-function getSheetContent (): ITicker[] {
-  if (sheetIsEmpty) return []
+function getSheetContent (ss: Spreadsheet): ITicker[] {
+  if (sheetIsEmpty()) return []
 
-  const rows = sheet
-    .getRange(`C${headerRowsOffset}:F${lastRow}`)
-    .getValues()
+  const rows = ss.getRange(`C${headerRowsOffset}:F${ss.getLastRow()}`).getValues()
 
   return rows.map((row: string[], i: number): ITicker => {
     const code = row[0]
@@ -131,12 +127,19 @@ function getSheetContent (): ITicker[] {
 
 /* eslint-disable-next-line */
 function doGet(e: GetEvent) {
-  loadSheetCond(e)
-
   if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
 
+  loadSheetCond(e)
+  const ss = getActiveSheet()
+
   try {
-    return response(HttpStatus.OK, getSheetContent())
+    const content = getSheetContent(ss)
+
+    return response(HttpStatus.OK, {
+      activeSheet: getActiveSheet().getSheetName(),
+      isDebug: isDebugRequest(e),
+      content
+    })
   } catch (ex) {
     return response(HttpStatus.INTERNAL_ERROR, errorEvent(ex, e))
   }
@@ -144,16 +147,17 @@ function doGet(e: GetEvent) {
 
 /* eslint-disable-next-line */
 function doPost(e: PostEvent) {
-  loadSheetCond(e)
-
   if (!isAuthorized(e)) { return response(HttpStatus.UNAUTHORIZED) }
   if (typeof (e.postData) === 'undefined') { return response(HttpStatus.BAD_REQUEST) }
+
+  loadSheetCond(e)
+  const ss = getActiveSheet()
 
   try {
     const { tickers } = JSON.parse(e.postData.contents)
 
-    cleanAll()
-    updateSheetContent(tickers)
+    cleanAll(ss)
+    updateSheetContent(ss, tickers)
 
     return response(HttpStatus.OK)
   } catch (ex) {
