@@ -6,7 +6,6 @@
   "engines": {
     "node": ">=12.0.0"
   },
-  "dependencies": {},
   "devDependencies": {
     "@google/clasp": "^2.3.0",
     "@types/google-apps-script": "^1.0.16",
@@ -14,6 +13,7 @@
     "@typescript-eslint/parser": "^4.4.1",
     "eslint": "^7.11.0",
     "husky": "^4.3.0",
+    "prettier": "^2.1.2",
     "standardx": "^5.0.0",
     "typescript": "^3.8.2"
   },
@@ -21,6 +21,8 @@
     "lint": "eslint src/*.ts",
     "check": "standardx src/*.ts",
     "standard": "standardx --fix src/*.ts",
+    "prettier": "prettier --no-semi --print-width 100 --single-quote --trailing-comma none --write 'src/*.ts'",
+    "beautify": "npm run prettier && npm run standard",
     "login": "clasp login",
     "push": "clasp push",
     "deploy:web": "clasp deploy --deploymentId \"$GAS_WEB_DEPLOYMENT_ID\"",
