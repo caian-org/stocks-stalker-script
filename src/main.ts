@@ -101,18 +101,18 @@ function updateSheetContent (ss: Spreadsheet, tickers: ITicker[]): void {
 function getSheetContent (ss: Spreadsheet): ITicker[] {
   if (sheetIsEmpty()) return []
 
-  const rows = ss.getRange(`C${headerRowsOffset}:F${ss.getLastRow()}`).getValues()
+  return ss.getRange(`C${headerRowsOffset}:F${ss.getLastRow()}`).getValues()
+    .map(
+      (row: string[], i: number): ITicker => {
+        const code = row[0].trim()
+        const isBought = row[1] === 'Y'
+        const expBuy = parseFloat(row[2]) || undefined
+        const expSell = parseFloat(row[3]) || undefined
 
-  return rows.map(
-    (row: string[], i: number): ITicker => {
-      const code = row[0]
-      const isBought = row[1] === 'Y'
-      const expBuy = parseFloat(row[2]) || undefined
-      const expSell = parseFloat(row[3]) || undefined
-
-      return { row: i, code, isBought, expBuy, expSell }
-    }
-  )
+        return { row: i, code, isBought, expBuy, expSell }
+      }
+    )
+    .filter((ticker: ITicker): boolean => ticker.code !== '')
 }
 
 /* HTTP events */
