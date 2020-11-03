@@ -114,13 +114,13 @@ function doGet(e: GetEvent) {
   const ss = getActiveSheet()
 
   try {
-    const content = getSheetContent(ss)
-
-    return response(HttpStatus.OK, {
+    const data = {
       activeSheet: getActiveSheet().getSheetName(),
       isDebug: isDebugRequest(e),
-      content
-    })
+      content: getSheetContent(ss)
+    }
+
+    return response(HttpStatus.OK, data)
   } catch (ex) {
     return response(HttpStatus.INTERNAL_ERROR, errorEvent(ex, e))
   }
