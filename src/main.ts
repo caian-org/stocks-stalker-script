@@ -76,19 +76,6 @@ const setSheet = (name: string) => SpreadsheetApp.setActiveSheet(document.getShe
 const loadSheetCond = (e: HttpEvent) =>
   isDebugRequest(e) ? setSheet(Sheet.DEBUG) : setSheet(Sheet.TICKERS)
 
-function cleanAll (ss: Spreadsheet): void {
-  if (sheetIsEmpty()) return
-
-  const last = ss.getLastRow()
-
-  const values: string[][] = []
-  for (let i = 0, l = last - headerRowsOffset + 1; i < l; i++) {
-    values.push(['', '', '', '', '', ''])
-  }
-
-  ss.getRange(`C${headerRowsOffset}:H${last}`).setValues(values)
-}
-
 function updateSheetContent (ss: Spreadsheet, tickers: ITicker[]): void {
   tickers.forEach((t: ITicker): void => {
     const row = t.row + headerRowsOffset
@@ -154,8 +141,6 @@ function doPost(e: PostEvent) {
 
   try {
     const { tickers } = JSON.parse(e.postData.contents)
-
-    cleanAll(ss)
     updateSheetContent(ss, tickers)
 
     return response(HttpStatus.OK)
